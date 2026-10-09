@@ -55,16 +55,16 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     // Check for unavailable products
-    const unavailable = products.filter(p => p.availability === 'UNAVAILABLE');
+    const unavailable = products.filter((p: (typeof products)[number]) => p.availability === 'UNAVAILABLE');
     if (unavailable.length > 0) {
       return res.status(400).json({
-        error: `The following products are currently unavailable: ${unavailable.map(p => p.name).join(', ')}`,
+        error: `The following products are currently unavailable: ${unavailable.map((p: (typeof products)[number]) => p.name).join(', ')}`,
       });
     }
 
     // Calculate totals
     const orderItems = items.map(item => {
-      const product = products.find(p => p.id === item.productId)!;
+      const product = products.find((p: (typeof products)[number]) => p.id === item.productId)!;
       return {
         productId: item.productId,
         productName: product.name,

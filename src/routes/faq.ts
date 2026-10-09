@@ -18,7 +18,7 @@ router.get('/', async (_req: Request, res: Response) => {
     });
 
     // Group FAQs by category
-    const grouped = faqs.reduce((acc: Record<string, typeof faqs>, faq) => {
+    const grouped = faqs.reduce((acc: Record<string, typeof faqs>, faq: (typeof faqs)[number]) => {
       const cat = faq.category || 'General';
       if (!acc[cat]) acc[cat] = [];
       acc[cat].push(faq);
