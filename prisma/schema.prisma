@@ -1,0 +1,180 @@
+// Nexora Digital - Prisma Schema
+// Database: PostgreSQL (Neon serverless)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Categories ──────────────────────────────────────────────────────────
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  icon        String?   // Icon identifier or URL
+  image       String?   // Category banner image URL
+  order       Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+
+  @@map("categories")
+}
+
+// ─── Products ────────────────────────────────────────────────────────────
+
+enum Availability {
+  IN_STOCK
+  ON_REQUEST
+  UNAVAILABLE
+}
+
+model Product {
+  id               String       @id @default(cuid())
+  name             String
+  slug             String       @unique
+  shortDescription String?
+  description      String       // Full description (supports markdown)
+  categoryId       String
+  category         Category     @relation(fields: [categoryId], references: [id])
+  price            Float        // Price in BDT
+  originalPrice    Float?       // Original price for showing discounts
+  availability     Availability @default(IN_STOCK)
+  image            String?      // Product image URL
+  images           String[]     // Additional images
+  region           String?      // Supported region/server
+  plan             String?      // Exact plan or package name
+  deliveryTime     String?      // Estimated delivery time
+  fulfillmentMethod String?     // How the product is delivered
+  requirements     String?      // Customer requirements
+  restrictions     String?      // Eligibility or restrictions
+  refundTerms      String?      // Refund/cancellation conditions
+  supportPeriod    String?      // Support duration
+  isFeatured       Boolean      @default(false)
+  isPublished      Boolean      @default(true)
+  tags             String[]
+  order            Int          @default(0)
+  viewCount        Int          @default(0)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  orderItems       OrderItem[]
+
+  @@index([categoryId])
+  @@index([slug])
+  @@index([isPublished, isFeatured])
+  @@map("products")
+}
+
+// ─── Orders ──────────────────────────────────────────────────────────────
+
+enum OrderStatus {
+  PENDING_CONFIRMATION
+  AWAITING_PAYMENT
+  PAYMENT_UNDER_VERIFICATION
+  PAID
+  PROCESSING
+  COMPLETED
+  ON_HOLD
+  CANCELLED
+  REFUND_REQUESTED
+  REFUNDED
+  FAILED
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderRef        String      @unique // Public-facing order reference
+  customerName    String
+  customerEmail   String
+  customerPhone   String?
+  status          OrderStatus @default(PENDING_CONFIRMATION)
+  totalAmount     Float
+  paymentMethod   String?
+  paymentRef      String?     // Payment reference from provider
+  notes           String?     // Internal notes
+  customerNotes   String?     // Customer notes
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([orderRef])
+  @@index([customerEmail])
+  @@index([status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+  productName String  // Snapshot of product name at time of order
+  quantity    Int     @default(1)
+  unitPrice   Float   // Price at time of order
+  totalPrice  Float
+  region      String? // Region specified for this order
+  playerInfo  String? // Player ID, username, etc. for gaming top-ups
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+// ─── Contact Messages ────────────────────────────────────────────────────
+
+enum MessageStatus {
+  NEW
+  READ
+  REPLIED
+  ARCHIVED
+}
+
+model ContactMessage {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  status    MessageStatus @default(NEW)
+  repliedAt DateTime?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([status])
+  @@map("contact_messages")
+}
+
+// ─── FAQ ─────────────────────────────────────────────────────────────────
+
+model FAQ {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  category  String?  // FAQ category grouping
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("faqs")
+}
+
+// ─── Site Settings (Key-Value store for dynamic content) ─────────────────
+
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  type      String   @default("text") // text, html, json, image
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
