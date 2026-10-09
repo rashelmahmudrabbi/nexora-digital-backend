@@ -84,8 +84,8 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
   });
 });
 
-// ─── Start Server if run directly ────────────────────────────────────────
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+// ─── Start Server if run locally (not in serverless) ─────────────────────
+if (!process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`🚀 Nexora Digital API running on port ${PORT}`);
   });
