@@ -112,7 +112,7 @@ router.post('/', async (req: Request, res: Response) => {
 // GET /api/orders/track/:ref - Track order by reference
 router.get('/track/:ref', async (req: Request, res: Response) => {
   try {
-    const { ref } = req.params;
+    const ref = req.params.ref as string;
     const { email } = req.query;
 
     if (!email) {
